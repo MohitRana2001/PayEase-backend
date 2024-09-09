@@ -7,6 +7,14 @@ const jwt = require("jsonwebtoken");
 const { JWT_SECRET } = require("../config");
 const  { authMiddleware } = require("../middleware");
 
+router.get("/" , async (req,res) => {
+    try{
+        res.status(200).json({message : "server activated"});
+    } catch(e) {
+        res.status(404).json({message : "failed activation"});
+    }
+})
+
 const signupBody = zod.object({
     username: zod.string().email(),
 	firstName: zod.string(),
