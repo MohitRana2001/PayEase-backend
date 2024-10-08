@@ -1,25 +1,27 @@
-const { JWT_SECRET } = require("./config");
-const jwt = require("jsonwebtoken");
-
-const authMiddleware = (req, res, next) => {
-    // Get the token from the Authorization header
-    const token = req.header('Authorization').replace('Bearer ', '');
-
-    if (!token) {
-        return res.status(401).json({ message: "No token, authorization denied" });
+// middleware.js
+export default function middleware(req, res, next) {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+  
+    if (token) {
+      fetch('/api/auth/verifyToken', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.valid) {
+          req.userId = data.user.userId; 
+          next();
+        } else {
+          res.status(401).json({ message: 'Unauthorized' });
+        }
+      })
+      .catch(error => {
+        console.error('Error verifying token:', error);
+        res.status(500).json({ message: 'Internal server error' });
+      });
+    } else {
+      next(); 
     }
-
-    try {
-        // Verify token
-        const decoded = jwt.verify(token, JWT_SECRET);
-        // Attach the user ID to the request object
-        req.userId = decoded.userId;
-        next();
-    } catch (err) {
-        res.status(401).json({ message: "Token is not valid" });
-    }
-};
-
-module.exports = {
-    authMiddleware
-}
+  }
